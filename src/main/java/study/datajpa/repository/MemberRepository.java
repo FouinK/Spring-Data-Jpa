@@ -1,24 +1,8 @@
 package study.datajpa.repository;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import study.datajpa.entity.Member;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+public interface MemberRepository extends JpaRepository<Member, Long> {
 
-@Repository
-public class MemberRepository {
-
-
-    @PersistenceContext
-    private EntityManager em;
-
-    public Member save(Member member) {
-        em.persist(member);
-        return member;
-    }
-
-    public Member find(Long id) {
-        return em.find(Member.class, id);
-    }
 }

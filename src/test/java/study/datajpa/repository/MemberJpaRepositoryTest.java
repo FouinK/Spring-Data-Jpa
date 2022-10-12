@@ -90,4 +90,29 @@ class MemberJpaRepositoryTest {
         assertEquals(1, result.size());
 
     }
+
+    @Test
+    public void pagingTest() {
+        // given
+        memberJpaRepository.save(new Member("member1", 10));
+        memberJpaRepository.save(new Member("member2", 10));
+        memberJpaRepository.save(new Member("member3", 10));
+        memberJpaRepository.save(new Member("member4", 10));
+        memberJpaRepository.save(new Member("member5", 10));
+
+        int age = 10;
+        int offset = 0;
+        int limit = 3;
+
+        // when
+        List<Member> result = memberJpaRepository.findByPage(age, offset, limit);
+        long totalCount = memberJpaRepository.totalCount(age);
+
+        // then
+        // 페이지 계산 공식 적용
+
+        assertEquals(result.size(), 3);
+        assertEquals(totalCount, 5);
+
+    }
 }

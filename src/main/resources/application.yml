@@ -11,6 +11,7 @@ spring:
       hibernate:
         format_sql: true
         show_sql: true
+#        dialect: org.hibernate.dialect.Oracle10gDialect 오라클 방언 적용
 logging:
   level:
     org.hibernate.sql: debug

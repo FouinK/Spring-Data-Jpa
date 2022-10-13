@@ -12,6 +12,8 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,6 +28,9 @@ class MemberRepositoryTest {
 
     @Autowired
     TeamRepository teamRepository;
+
+    @PersistenceContext
+    EntityManager em;
 
     @Test
     public void MemberRepositoryTest() {
@@ -192,11 +197,15 @@ class MemberRepositoryTest {
         PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
 
         // when
-        Page<Member> result = memberRepository.findByAge(age, pageRequest);
+        Page<Member> page = memberRepository.findByAge(age, pageRequest);     //Slice 형식은 n개를 요청하면 n+1개를 가져옴, totalCount는 가져오지 않음
+
+        Page<MemberDto> toMap = page.map(member -> new MemberDto(member.getId(), member.getUsername(), null));
+
+
 
         // then
-        List<Member> content = result.getContent();
-        long totalElements = result.getTotalElements();
+        List<Member> content = page.getContent();
+        long totalElements = page.getTotalElements();
 
         for (Member member : content) {
             System.out.println("member = " + member);
@@ -206,13 +215,38 @@ class MemberRepositoryTest {
 
         assertEquals(content.size(), 3);        //현재 페이지 엘리먼트 개수
         assertEquals(totalElements, 5);         //전체 페이지의 엘리먼트 총 개수
-        assertEquals(result.getNumber(), 0);    //page 넘버
-        assertEquals(result.getTotalPages(), 2);
-        assertEquals(result.isFirst(), true);
-        assertEquals(result.hasNext(), true);
+        assertEquals(page.getNumber(), 0);    //page 넘버
+        assertEquals(page.getTotalPages(), 2);
+        assertEquals(page.isFirst(), true);
+        assertEquals(page.hasNext(), true);
 
     }
 
+    @Test
+    public void bulkUpdateTest() {
+        // given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 22));
+        memberRepository.save(new Member("member3", 12));
+        memberRepository.save(new Member("member4", 21));
+        memberRepository.save(new Member("member5", 40));
+
+        // when
+        int resultCount = memberRepository.bulkAgePlus(20);
+        em.flush();         //쿼리 나가는 걸 보여줌 (디비에 반영)
+        //em.clear()의 기능을 하는 것이 @Modifying(clearAutomatically = true)
+        em.clear();         //벌크 연산은 영속성을 무시하기 때문에 영속성 컨텍스트를 다시 사용하려면 클리어를 통해 초기화를 해줘야 함.
+
+
+        Member member5 = memberRepository.findMemberByUsername("member5");
+
+
+        System.out.println("member5 = " + member5);
+
+        // then
+        assertEquals(resultCount, 3);
+
+    }
 
 
 }

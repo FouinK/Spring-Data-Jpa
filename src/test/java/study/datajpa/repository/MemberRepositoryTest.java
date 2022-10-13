@@ -222,6 +222,7 @@ class MemberRepositoryTest {
 
     }
 
+
     @Test
     public void bulkUpdateTest() {
         // given
@@ -233,19 +234,54 @@ class MemberRepositoryTest {
 
         // when
         int resultCount = memberRepository.bulkAgePlus(20);
-        em.flush();         //쿼리 나가는 걸 보여줌 (디비에 반영)
-        //em.clear()의 기능을 하는 것이 @Modifying(clearAutomatically = true)
-        em.clear();         //벌크 연산은 영속성을 무시하기 때문에 영속성 컨텍스트를 다시 사용하려면 클리어를 통해 초기화를 해줘야 함.
 
+        /*em.flush();         //쿼리 나가는 걸 보여줌 (디비에 반영)
+        //em.clear()의 기능을 하는 것이 @Modifying(clearAutomatically = true)
+        em.clear();         //벌크 연산은 영속성을 무시하기 때문에 영속성 컨텍스트를 다시 사용하려면 클리어를 통해 초기화를 해줘야 함.*/
 
         Member member5 = memberRepository.findMemberByUsername("member5");
-
 
         System.out.println("member5 = " + member5);
 
         // then
         assertEquals(resultCount, 3);
+    }
+    
+    @Test
+    public void laztLoadingTest() {
+        // given
+        Team teamA = new Team("TeamA");
+        Team teamB = new Team("TeamB");
+        teamRepository.save(teamB);
+        teamRepository.save(teamA);
 
+        Member member = new Member("member1", 20, teamA);
+        Member member1 = new Member("member2", 20, teamB);
+        memberRepository.save(member);
+        memberRepository.save(member1);
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<Member> findMembers = memberRepository.findAll();
+
+        // then
+
+        for (Member findMember : findMembers) {
+            System.out.println("findMember = " + findMember.getUsername());
+            System.out.println("findMember.getTeam().getClass() = " + findMember.getTeam().getClass());     //Member 연관관계의 Team을 찾기 전까지는 가짜 객체를 가져옴 (select문을 날리지 않음)
+            System.out.println("findMember.getTeamName = " + findMember.getTeam().getName());
+        }
+    }
+
+    @Test
+    public void callCustom() {
+        // given
+        List<Member> result = memberRepository.findMemberCustom();
+        // when
+
+        // then
     }
 
 

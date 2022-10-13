@@ -2,6 +2,7 @@ package study.datajpa.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +14,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
 
     @Query("select m from Member m where m.username = :username and m.age = :age")
@@ -29,7 +30,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByNames(@Param("names") Collection<String> names);
 
     List<Member> findListByUsername(String username);   //컬렉션
+
     Member findMemberByUsername(String username);   //단건
+
     Optional<Member> findOptionalByUsername(String username);   //단건 Optional
 
     @Query(value = "select m from Member m left join m.team t",
@@ -46,5 +49,14 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query(value = "update Member m set m.age = m.age+1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
 
+    @Query("SELECT m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
+
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findAll();
+
+    @EntityGraph(attributePaths = {"team"})                 //원하는 옵션을 넣고 엔티티 그래프로 fetch join할 수 있음
+    List<Member> findEntityGraphByUsername(String username);
 
 }
